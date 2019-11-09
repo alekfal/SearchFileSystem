@@ -35,7 +35,7 @@ def treeSearch(searchPath, startsWith, contains, endsWith):
     if not itemsFound:
         print("No items found ...")
     else:
-        return itemsFound
+        return (itemsFound)
 
 
 
@@ -67,7 +67,7 @@ def findRecord(searchPath, satPath, satRow, year):
     if not recPaths:
         print("No record-paths found ...")
     else:
-        return recPaths
+        return (recPaths)
     
 
 
@@ -104,4 +104,4 @@ def findBand(recPaths, pattern):
     # Sort images based on date and band-names (ascending)
     paths = sorted(paths)
     print('For pattern "{}", found {} results.'.format(pattern, len(paths)))
-    return paths
+    return (paths)
