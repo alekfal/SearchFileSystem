@@ -89,6 +89,7 @@ def findBand(recPaths, pattern):
             for (dirpath, dirnames, filenames) in walk(recPaths[i]):
                 # For every image that ends with requested pattern
                 for file in filenames:
+                    print(file)
                     if file.endswith(str(pattern)):
                         # Add image's path to the list
                         paths.append(dirpath+'/'+file)  
