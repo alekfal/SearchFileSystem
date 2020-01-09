@@ -83,15 +83,13 @@ def findBand(recPaths, pattern):
     paths = []
     # Check if recPaths is a directory path
     if os.path.isdir(recPaths[0]):
-        # For each record-folder
-        for i in range(len(recPaths)):
-            # Walk all filesystem-tree branches
-            for (dirpath, dirnames, filenames) in walk(recPaths[i]):
-                # For every image that ends with requested pattern
-                for file in filenames:
-                    if file.endswith(str(pattern)):
-                        # Add image's path to the list
-                        paths.append(dirpath+'/'+file)  
+        # Walk all filesystem-tree branches
+        for (dirpath, dirnames, filenames) in walk(recPaths):
+            # For every image that ends with requested pattern
+            for file in filenames:
+                if file.endswith(str(pattern)):
+                    # Add image's path to the list
+                    paths.append(dirpath+'/'+file)  
     # Check if recPaths is a file path
     elif os.path.isfile(recPaths[0]):
         # For every image that ends with requested pattern
