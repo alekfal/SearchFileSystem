@@ -27,10 +27,10 @@ def treeSearch(searchPath, startsWith, contains, endsWith):
     for (dirpath, dirnames, filenames) in walk(searchPath):
         for filename in filenames:
             if filename.startswith(startsWith) and filename.endswith(endsWith) and contains in filename:
-                print(filename)
                 itemsFound.append(dirpath+'/'+filename)
 
     itemsFound = sorted(itemsFound)
+    print("Found {} items for given pattern {} {} {}...".format(len(itemsFound), startsWith, contains, endsWith))
     # Check if searching has been completed successfully
     if not itemsFound:
         print("No items found ...")
@@ -79,6 +79,8 @@ def findBand(recPaths, pattern):
     paths = list of paths or files found. Paths should be absolute.
     
     Find folders or files, ending by pattern.
+    filename_pattern = os.path.join(searchPath, '*Cube.*')
+
     """
     paths = []
     # Check if recPaths is a directory path
