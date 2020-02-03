@@ -27,7 +27,8 @@ def treeSearch(searchPath, startsWith, contains, endsWith):
     for (dirpath, dirnames, filenames) in walk(searchPath):
         for filename in filenames:
             if filename.startswith(startsWith) and filename.endswith(endsWith) and contains in filename:
-                itemsFound.append(dirpath+'/'+filename)
+                # To work with many OS's
+                itemsFound.append(os.path.join(dirpath,filename))
 
     itemsFound = sorted(itemsFound)
     print("Found {} items for given pattern {} {} {}...".format(len(itemsFound), startsWith, contains, endsWith))
@@ -44,8 +45,7 @@ def findRecord(searchPath, satPath, satRow, year):
     searchPath = string. Path from where to start searching.
     satPath, satRow = string. Tile path-row, each as 3 digit number.
     year = string or integer. The year searching for.
-    recPaths = list of paths of differend records (dates) for the requested
-                tile.
+    recPaths = list of paths of differend records (dates) for the requested tile.
     """
     # Check requested path and row, as given from user
     if len(str(satPath)) != 3:
@@ -61,7 +61,7 @@ def findRecord(searchPath, satPath, satRow, year):
             # If folder includes path-row and date
             if str(satPath)+str(satRow)+'_'+str(year) in dirname:
                 # Gather paths to folders.
-                recPaths.append(dirpath+'/'+dirname)
+                recPaths.append(os.path.join(dirpath, dirname))
     recPaths = sorted(recPaths)
     # Check if searching has been completed successfully
     if not recPaths:
@@ -91,7 +91,7 @@ def findBand(recPaths, pattern):
             for file in filenames:
                 if file.endswith(str(pattern)):
                     # Add image's path to the list
-                    paths.append(dirpath+'/'+file)  
+                    paths.append(os.path.join(dirpath, file))  
     # Check if recPaths is a file path
     elif os.path.isfile(recPaths[0]):
         # For every image that ends with requested pattern
