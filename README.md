@@ -4,7 +4,7 @@ Tools to manipulate Sentinel-2 satellite data.
 
 ## Module searchInFilesystem
 
-### treeSearch(searchPath, startsWith, contains, endsWith, sort=True)
+#### treeSearch(searchPath, startsWith, contains, endsWith, sort=True)
 
 Search for files under the given searchPath.
 
@@ -22,10 +22,10 @@ Return:
 ---------------------------------------------------------------------
 
 
-### metaSearch(searchPath, lessThan)
+#### metaSearch(searchPath, lessThan)
 
-Select fullpaths of Sentinel-2 scenes, by cloud coverage. \
-Reads MTD.xml metadata file. \
+Select fullpaths of Sentinel-2 scenes, by cloud coverage.
+Reads MTD.xml metadata file.
 Keep images with cloud coverage less than given percentage.
 
 Args:
@@ -39,7 +39,7 @@ Return:
 ---------------------------------------------------------------------
 
 
-### findBand(searchPath, pattern, sort=True)
+#### findBand(searchPath, pattern, sort=True)
 
 Search for files under the given searchPath, ending by pattern.
 
@@ -55,7 +55,7 @@ Return:
 ---------------------------------------------------------------------
 
 
-### findRecord(searchPath, satPath, satRow, year, sort=True)
+#### findRecord(searchPath, satPath, satRow, year, sort=True)
 
 Search for Sentinel-2 scene folders, by satellite's path, row & year.
 

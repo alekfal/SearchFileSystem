@@ -23,6 +23,7 @@ def treeSearch(searchPath, startsWith, contains, endsWith, sort=True):
     for (dirpath, dirnames, filenames) in walk(searchPath):
         for filename in filenames:
             if filename.startswith(startsWith) and filename.endswith(endsWith) and contains in filename:
+<<<<<<< HEAD
                 itemsFound.append(dirpath+'/'+filename)
     
     # Correctly sorted fullpaths, by date. 
@@ -36,6 +37,10 @@ def treeSearch(searchPath, startsWith, contains, endsWith, sort=True):
             return datetime.strptime(oneFullpath.split('.SAFE')[0].split('_')[-1][0:8], '%Y%m%d')
 
         itemsFound = sorted(itemsFound, key=get_pattern)
+=======
+                # To work with many OS's
+                itemsFound.append(os.path.join(dirpath,filename))
+>>>>>>> c700b93a1483816144f351a0d7eb499a8c727258
 
     print("For given pattern '{}'*'{}'*'{}', found {} results...".format(
         startsWith, contains, endsWith, len(itemsFound)))
@@ -59,6 +64,7 @@ def metaSearch(searchPath, lessThan):
     Return:
     itemsFound (list of strings): List with fullpaths of itemsFound, sorted be date.
     """
+<<<<<<< HEAD
     import xml.etree.ElementTree as ET
 
     # Find all metadata files in given directory.
@@ -93,6 +99,12 @@ def findBand(searchPath, pattern, sort=True):
 
     Return:
     itemsFound (list of strings): List with fullpaths of itemsFound, sorted be date.
+=======
+    searchPath = string. Path from where to start searching.
+    satPath, satRow = string. Tile path-row, each as 3 digit number.
+    year = string or integer. The year searching for.
+    recPaths = list of paths of differend records (dates) for the requested tile.
+>>>>>>> c700b93a1483816144f351a0d7eb499a8c727258
     """
     import os
     from os import walk
@@ -167,12 +179,21 @@ def findRecord(searchPath, satPath, satRow, year, sort=True):
         for dirname in dirnames:
             # If folder includes path-row and date.
             if str(satPath)+str(satRow)+'_'+str(year) in dirname:
+<<<<<<< HEAD
                 # Gather paths to folder.
                 itemsFound.append(dirpath+'/'+dirname)
 
     # Correctly sorted fullpaths, by date. 
     if sort == False:
         pass
+=======
+                # Gather paths to folders.
+                recPaths.append(os.path.join(dirpath, dirname))
+    recPaths = sorted(recPaths)
+    # Check if searching has been completed successfully
+    if not recPaths:
+        print("No record-paths found ...")
+>>>>>>> c700b93a1483816144f351a0d7eb499a8c727258
     else:
         def get_pattern(oneFullpath):
             """ Returns the date extracted from Sentinel-2 fullpath filenames.
@@ -185,8 +206,29 @@ def findRecord(searchPath, satPath, satRow, year, sort=True):
     print("For given pattern '{}' * '{}' * '{}', found {} results...".format(
         satPath, satRow, endsWith, len(itemsFound)))
 
+<<<<<<< HEAD
     # Check if searching has been completed successfully.
     if not itemsFound:
         print("No items found ...")
+=======
+    """
+    paths = []
+    # Check if recPaths is a directory path
+    if os.path.isdir(recPaths[0]):
+        # Walk all filesystem-tree branches
+        for (dirpath, dirnames, filenames) in walk(recPaths):
+            # For every image that ends with requested pattern
+            for file in filenames:
+                if file.endswith(str(pattern)):
+                    # Add image's path to the list
+                    paths.append(os.path.join(dirpath, file))  
+    # Check if recPaths is a file path
+    elif os.path.isfile(recPaths[0]):
+        # For every image that ends with requested pattern
+        for file in recPaths:
+            if file.endswith(str(pattern)):
+                # Add image's path to the list
+                paths.append(os.path.abspath(file))
+>>>>>>> c700b93a1483816144f351a0d7eb499a8c727258
     else:
         return (itemsFound)
