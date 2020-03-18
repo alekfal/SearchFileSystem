@@ -4,7 +4,7 @@ Tools to manipulate Sentinel-2 satellite data.
 
 ## Module searchInFilesystem
 
-#### treeSearch(searchPath, startsWith, contains, endsWith, sort=True)
+#### findMore(searchPath, startsWith, contains, endsWith, mode, sort=True)
 
 Search for files under the given searchPath.
 
@@ -13,6 +13,7 @@ Args:
 * startsWith (string): Prefix of wanted filename.
 * contains (string): Text contained in wanted filename.
 * endsWith (string): Ending or file-format of wanted filename.
+* mode (int): 1 = search for dirs OR 2 = search for files.
 * sort (boolean, optional): True by default, sorts itemsFound by date.
 
 Return:
@@ -39,13 +40,14 @@ Return:
 ---------------------------------------------------------------------
 
 
-#### findBand(searchPath, pattern, sort=True)
+#### find(searchPath, pattern, mode, sort=True)
 
 Search for files under the given searchPath, ending by pattern.
 
 Args:
 * searchPath (string): From where searching starts.
 * pattern (string): End of path or file looking for. For files, must include format.
+* mode (int): 1 = search for dirs OR 2 = search for files.
 * sort (boolean, optional): True by default, sorts itemsFound by date.
 
 Return:
