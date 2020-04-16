@@ -1,9 +1,32 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+from os import walk
+import datetime as dt
+import logging
 
 
-def findMore(searchPath, startsWith, contains, endsWith, mode, sort=True):
+logger = logging.getLogger(__name__)
+# Override the default severity of logging.
+logger.setLevel('INFO')
+# Use StreamHandler to log to the console.
+stream_handler = logging.StreamHandler()
+# Don't forget to add the handler.
+logger.addHandler(stream_handler)
+
+
+def _get_pattern(oneFullpath):
+    """ Returns the date extracted from Sentinel-2 fullpath filenames.
+    Args:
+        oneFullpath (string): Fullpath.
+    Returns datetime object.
+    """
+    return dt.datetime.strptime(oneFullpath.split('.SAFE')[0].split('_')[-1][0:8], '%Y%m%d')
+
+
+
+def findMore(searchPath, startsWith, contains, endsWith, mode, sort=True, **kwargs):
     """ Search for directories or files under the given searchPath.
 
     Args:
@@ -17,8 +40,6 @@ def findMore(searchPath, startsWith, contains, endsWith, mode, sort=True):
     Return:
     itemsFound (list of strings): List with fullpaths of itemsFound, sorted be date.
     """
-    import os
-    from os import walk
 
     itemsFound = []
     for (dirpath, dirnames, filenames) in walk(searchPath):
@@ -34,21 +55,15 @@ def findMore(searchPath, startsWith, contains, endsWith, mode, sort=True):
                 if filename.startswith(startsWith) and filename.endswith(endsWith) and contains in filename:
                     itemsFound.append(os.path.join(dirpath, filename))
         else:
-            print("Select search-mode, dir or file.")
+            logger.error("Select search-mode, dir or file.")
 
     # Correctly sorted fullpaths, by date. 
     if sort == False:
         pass
     else:
-        def get_pattern(oneFullpath):
-            """ Returns the date extracted from Sentinel-2 fullpath filenames.
-            """
-            from datetime import datetime
-            return datetime.strptime(oneFullpath.split('.SAFE')[0].split('_')[-1][0:8], '%Y%m%d')
+        itemsFound = sorted(itemsFound, key=_get_pattern)
 
-        itemsFound = sorted(itemsFound, key=get_pattern)
-
-    print("For given pattern '{}'*'{}'*'{}', found {} results...".format(
+    logger.info("For given pattern '{}'*'{}'*'{}', found {} results...".format(
         startsWith, contains, endsWith, len(itemsFound)))
 
     return (itemsFound)
@@ -56,17 +71,16 @@ def findMore(searchPath, startsWith, contains, endsWith, mode, sort=True):
 
 
 
-def metaSearch(searchPath, lessThan, verbose=False):
+def metaSearch(searchPath, lessThan, **kwargs):
     """ Select fullpaths of Sentinel-2 scenes, by cloud coverage. Reads
     MTD.xml metadata file. Keep images with cloud coverage less than given percentage.
 
     Args:
     searchPath (string): From where searching starts.
     lessThan (float): Cloud coverage value to campare with.
-    verbose (boolean, optional): True by default, print accepted of rejected dates.
 
     Return:
-    itemsFound (list of strings): List with fullpaths of itemsFound, sorted be date.
+    itemsFound (list of strings): List with fullpaths of itemsFound, sorted by date.
     """
     import xml.etree.ElementTree as ET
 
@@ -83,19 +97,15 @@ def metaSearch(searchPath, lessThan, verbose=False):
             path = f.split('.SAFE')[0] + '.SAFE'
             itemsFound.append(path)
 
-            if verbose == True:
-                print("{} --> Image accepted...".format(value))
+            logger.info("{} --> Image accepted...".format(value))
         else:
-            if verbose == True:
-                print("{} --> Image rejected...".format(value))
-            pass
+            logger.info("{} --> Image rejected...".format(value))
     
     return itemsFound
 
 
 
-
-def find(searchPath, pattern, mode, sort=True):
+def find(searchPath, pattern, mode, sort=True, **kwargs):
     """ Search for directories or files under the given searchPath, ending by pattern.
 
     Args:
@@ -105,10 +115,8 @@ def find(searchPath, pattern, mode, sort=True):
     sort (boolean, optional): True by default, sorts itemsFound by date.
 
     Return:
-    itemsFound (list of strings): List with fullpaths of itemsFound, sorted be date.
+    itemsFound (list of strings): List with fullpaths of itemsFound, sorted by date.
     """
-    import os
-    from os import walk
 
     itemsFound = []
     for (dirpath, dirnames, filenames) in walk(searchPath):
@@ -124,28 +132,22 @@ def find(searchPath, pattern, mode, sort=True):
                 if filename.endswith(str(pattern)):
                     itemsFound.append(os.path.join(dirpath, filename))
         else:
-            print("Select search-mode, dir or file.")
+            logger.error("Select search-mode, dir or file.")
 
     # Correctly sorted fullpaths, by date. 
     if sort == False:
         pass
     else:
-        def get_pattern(oneFullpath):
-            """ Returns the date extracted from Sentinel-2 fullpath filenames.
-            """
-            from datetime import datetime
-            return datetime.strptime(oneFullpath.split('.SAFE')[0].split('_')[-1][0:8], '%Y%m%d')
+        itemsFound = sorted(itemsFound, key=_get_pattern)
 
-        itemsFound = sorted(itemsFound, key=get_pattern)
-
-    print("For pattern '{}', found {} results.".format(pattern, len(itemsFound)))
+    logger.info("For pattern '{}', found {} results.".format(pattern, len(itemsFound)))
 
     return (itemsFound)
 
 
 
 
-def findRecord(searchPath, satPath, satRow, year, sort=True):
+def findRecord(searchPath, satPath, satRow, year, sort=True, **kwargs):
     """ Search for Sentinel-2 scene folders, by satellite's path, row & year.
 
     Args:
@@ -155,10 +157,8 @@ def findRecord(searchPath, satPath, satRow, year, sort=True):
     sort (boolean, optional): True by default, sorts itemsFound by date.
 
     Return:
-    itemsFound (list of strings): List with fullpaths of itemsFound, sorted be date.
+    itemsFound (list of strings): List with fullpaths of itemsFound, sorted by date.
     """
-    import os
-    from os import walk
 
     # Check requested path and row, as given from user.
     if len(str(satPath)) != 3:
@@ -168,7 +168,7 @@ def findRecord(searchPath, satPath, satRow, year, sort=True):
     
     itemsFound = []
     # Search every directory under the searchPath.
-    for (dirpath, dirnames, filenames) in walk(searchPath):
+    for (dirpath, dirnames, _) in walk(searchPath):
         # For every folder
         for dirname in dirnames:
             # If folder includes path-row and date.
@@ -180,15 +180,9 @@ def findRecord(searchPath, satPath, satRow, year, sort=True):
     if sort == False:
         pass
     else:
-        def get_pattern(oneFullpath):
-            """ Returns the date extracted from Sentinel-2 fullpath filenames.
-            """
-            from datetime import datetime
-            return datetime.strptime(oneFullpath.split('.SAFE')[0].split('_')[-1][0:8], '%Y%m%d')
+        itemsFound = sorted(itemsFound, key=_get_pattern)
 
-        itemsFound = sorted(itemsFound, key=get_pattern)
-
-    print("For given pattern '{}' * '{}' * '{}', found {} results...".format(
+    logger.info("For given pattern '{}' * '{}' * '{}', found {} results...".format(
         satPath, satRow, year, len(itemsFound)))
 
     return (itemsFound)
