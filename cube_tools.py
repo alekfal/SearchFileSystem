@@ -21,13 +21,52 @@ logger.addHandler(stream_handler)
 
 
 def _get_pattern(oneFullpath):
-    """ Returns the date extracted from Sentinel-2 fullpath filenames.
+    """ Sources the date extracted from Sentinel-2 fullpath filenames.
+    Uses the .SAFE format of Sentinel-2 data to be functional.
     Args:
         oneFullpath (string): Fullpath.
-    Returns datetime object.
+    Returns:
+        datetime object
     """
     return dt.datetime.strptime(oneFullpath.split('.SAFE')[0].split('_')[-1][0:8], '%Y%m%d')
 
+
+
+def cbdf2cbarr(cbdf, metadata):
+    """ Convert dataframe of cube to corresponding 3d cube array.
+    Args:
+        cbdf (pandas dataframe): Indexed as (rows:bands, row wise read, columns:individual pixels)
+        metadata (dictionary): Containing all cube metadata, as returned from rasterio lib
+    Return:
+        cbarr (3d array): Indexed as tensor (count:bands, height:rows, width:columns)
+    """
+
+    # Convert dataframe to array
+    temp = cbdf.to_numpy(dtype=metadata['dtype'])
+    # Create axis, from 2D to 3D
+    temp = temp[np.newaxis, :, np.newaxis]
+    # Reshape array
+    cbarr = np.reshape(temp, (metadata['count'], metadata['height'],  metadata['width']))
+
+    return cbarr
+
+
+def cbarr2cbdf(cbarr, metadata):
+    """ Convert 3d cube array to corresponding dataframe of cube.
+    Args:
+        cbarr (3d array): Indexed as tensor (count:bands, height:rows, width:columns)
+        metadata (dictionary): Containing all cube metadata, as returned from rasterio lib
+    Return:
+        cbdf (pandas dataframe): Indexed as (rows:bands, row wise read, columns:individual pixels)
+    """
+
+    # Drop array to 2D.
+    temp = np.reshape(cbarr, (metadata['count'], metadata['height'] *  metadata['width']))
+    # Convert array to dataframe.
+    cbdf = pd.DataFrame(
+        temp, columns=["pix_"+str(i) for i in range(0, metadata['height'] *  metadata['width'])])
+
+    return cbdf
 
 
 def cubePart(imPath, row_start, row_stop, col_start, col_stop, band_start, band_stop, **kwargs):
@@ -68,12 +107,10 @@ def cubePart(imPath, row_start, row_stop, col_start, col_stop, band_start, band_
         # Update metadata. Can be used to save new geolocated image.
         metadata.update(height=rows , width=cols, count=len(bands), transform=transf)
 
+        # Read image as 3d cube
         cube = src.read(bands, window=win)
-        # Every line was a pixel ?, now, every line is an image. So cube is dropped to 2D.
-        cube_arr = np.reshape(cube, (len(bands), rows * cols))
-        # Original data, from array to dataframe.
-        cube_df = pd.DataFrame(
-            cube_arr, columns=["pix_"+str(i) for i in range(0, rows * cols)])
+    # Convert array to dataframe
+    cube_df = cbarr2cbdf(cube, metadata)
 
     return cube, cube_df, metadata
 
@@ -95,12 +132,11 @@ def readCube(imPath, **kwargs):
     with rasterio.open(imPath) as src:
         metadata = src.meta
         bands = [i for i in range(1, metadata['count']+1)]
+
+        # Read image as 3d cube
         cube = src.read(bands)
-        # Every line was a pixel ?, now, every line is an image. So cube is dropped to 2D.
-        cube_arr = np.reshape(cube, (len(bands), metadata['height'] * metadata['width']))
-        # Original data, from array to dataframe.
-        cube_df = pd.DataFrame(
-            cube_arr, columns=["pix_"+str(i) for i in range(0, metadata['height'] * metadata['width'])])
+    # Convert array to dataframe
+    cube_df = cbarr2cbdf(cube, metadata)
 
     return cube, cube_df, metadata
 
@@ -120,13 +156,12 @@ def dataframe2tifCube(df, metadata, newFilename, searchPath, **kwargs):
     """
 
     bands = [i for i in range(1, metadata['count']+1)]
-    temp = df.to_numpy(dtype=metadata['dtype'])
-    temp = temp[np.newaxis, :, np.newaxis]
-    arr = np.reshape(temp, (metadata['count'], metadata['height'],  metadata['width']))
+    # Convert dataframe to array
+    arr = cbdf2cbarr(df, metadata)
 
     # New filename.
     cubeName = os.path.join(searchPath, str(newFilename) + '.tif')
-    # Stack products as timeseries cube.
+    # Write to disk timeseries cube.
     if len(bands) == 1:
         with rasterio.open(cubeName, 'w', **metadata) as dst:
             dst.write(arr)
@@ -194,3 +229,38 @@ def writeCube(listOfPaths, searchPath, newFilename, dtype, sort=False, **kwargs)
 
     logging.info("Metadata of written cube are:\n{}".format(metadata))
     return datetimes, metadata
+
+
+
+
+def cbInMem(listOfPaths, sort=False):
+    """ Create 3d cube in memory from paths of different bands.
+    Args:
+        listOfPaths (list of strings): Fullpaths of individual bands.
+        sort (boolean, optional): Sort fullpaths by date.
+    Return:
+        cbarr (3d array): Indexed as tensor (count:bands, height:rows, width:columns)
+    """
+
+    # Correctly sorted fullpaths, by date. 
+    if sort == False:
+        pass
+    else:
+        listOfPaths = sorted(listOfPaths, key=_get_pattern)
+
+    # Read metadata of random image
+    with rasterio.open(listOfPaths[0], 'r') as src:
+        metadata = src.meta
+
+    # Preallocate a zero array with corresponding dimensions
+    temp = np.zeros((1, metadata['height'], metadata['width']))
+
+    # Stack arrays as cube
+    for bandpath in listOfPaths[0:5]:
+        with rasterio.open(bandpath, 'r') as src:
+            arr = src.read()
+        
+        cbarr = np.concatenate([temp, arr])
+        temp = cbarr
+
+    return cbarr[1:, :, :]

@@ -79,7 +79,8 @@ def resampleBand(input_im_full_path, before, after, output_name=None, **kwargs):
 
 
 def normalizeCommonLayers(listOfPaths, destDtype, overwrite=False, **kwargs):
-    """  Normalize common bands of different dates, to selected dtype range.
+    """  Normalize common bands of different dates, from different files,
+        to selected dtype range, and save to disk.
 
     Args:
         listOfPaths (list of strings): Fullpaths of common bands.
@@ -170,13 +171,13 @@ def vectorize(raster_file, metadata, vector_file, driver, mask_value=None, **kwa
 
     end = dt.datetime.now()
     logging.info("Elapsed time to vectorize raster to shp {}:\n{} mins".format(
-        vector_file, (int((end-start).seconds/60)))
+        vector_file, (int((end-start).seconds/60))))
     return None
 
 
 
 
-    def gml2shp(sourcedataset, outputname=None, **kwargs):
+def gml2shp(sourcedataset, outputname=None, **kwargs):
     """ Convert format, from file.gml to file.shp & save to disk.
 
     Args:

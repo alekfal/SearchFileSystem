@@ -140,7 +140,7 @@ def find(searchPath, pattern, mode, sort=True, **kwargs):
     else:
         itemsFound = sorted(itemsFound, key=_get_pattern)
 
-    logger.info("For pattern '{}', found {} results.".format(pattern, len(itemsFound)))
+    logger.debug("For pattern '{}', found {} results.".format(pattern, len(itemsFound)))
 
     return (itemsFound)
 
