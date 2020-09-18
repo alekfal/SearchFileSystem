@@ -264,3 +264,38 @@ def cbInMem(listOfPaths, sort=False):
         temp = cbarr
 
     return cbarr[1:, :, :]
+
+
+
+
+def extremeDOY(cbdf, dates, mode='max'):
+    """ Compute DOYs of min or max value for every pixel's depth.
+    Args:
+        cbdf (pandas dataframe): Cube dataframe. Indexed as
+                                (rows:bands, row wise read, columns:individual pixels)
+        dates (list of strings): List containing dates from which is cube constructed.
+                        This information is produced from writeCube() function.
+        mode (string, optional): By default computes DOYs for 'max' values. Set to 'min' to compute
+                        DOYs for min values.
+    Return:
+        res (pandas series): Day of year of correspoding value.
+    """
+    if mode == 'max':
+        # Find index of max value, for every pixel. Starts from zero, skips NaN.
+        res = cbdf.idxmax()
+    elif mode == 'min':
+        # Find index of min value, for every pixel. Starts from zero, skips NaN.
+        res = cbdf.idxmin()
+    else:
+        print("mode = 'min' OR 'max'")
+
+    print("Dates found for {} values from whole image: {}".format(mode, res.unique()))
+    # Replace all index-of-week with corresponding date from .txt file, converted to datetime object
+    w = res.unique()
+    # Drop NaN values. Cuz idxmax() returns NaN if all entries are NaN.
+    w = w[~np.isnan(w)]
+    for value in w:
+        res.replace(value, dt.datetime.strptime(dates[int(value)], '%Y-%m-%d'), inplace=True)
+
+    # Convert datetime objects to day of year
+    return res.dt.dayofyear
