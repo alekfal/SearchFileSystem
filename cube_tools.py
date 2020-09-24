@@ -226,6 +226,8 @@ def writeCube(listOfPaths, searchPath, newFilename, dtype, sort=False, **kwargs)
 
             with rasterio.open(layer) as src:
                 dst.write_band(id, src.read(1).astype(dtype))
+                band_name = os.path.split(src.name)[-1].split('.')[0]
+                dst.set_band_description(id, band_name)
 
     logging.info("Metadata of written cube are:\n{}".format(metadata))
     return datetimes, metadata
